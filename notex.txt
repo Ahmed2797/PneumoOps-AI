@@ -1,0 +1,6 @@
+step1 :
+    templates.sh
+    requirements.txt
+    setup.py
+
+    pip install -r requirements.txt
