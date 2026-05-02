@@ -36,6 +36,13 @@ pip install -r requirements.txt
 https://drive.google.com/file/d/1bo0OC0oT2o8lx7d5fBmVMEyOtBMMCBp2/view?usp=sharing
 https://www.kaggle.com/c/siim-acr-pneumothorax-segmentation
 
+## .env
+AWS_ACCESS_KEY_ID = your_access_key_here
+AWS_SECRET_ACCESS_KEY = your_secret_key_here
+AWS_DEFAULT_REGION = us-east-1
+
+## Load-Data
+python gdown_push_s3.py
 ## Train The model-pipeline
 python main.py
 
