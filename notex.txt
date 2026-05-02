@@ -8,3 +8,23 @@ step1 :
 step2 :
     logging.py
     exception.py
+
+step3 :
+    python gdown_push_s3.py
+
+step4 :
+    entity/config.py
+    utils/__init__.py
+    constant/__init__.py
+    yamlfile/config.yamlfile
+    configeration/__init__.py
+
+            components/data_ingestion.py
+
+
+
+## use aws
+
+1. create users
+2. select AmazonS3FullAccess
+3. 
