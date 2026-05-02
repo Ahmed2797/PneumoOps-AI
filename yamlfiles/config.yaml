@@ -1,0 +1,15 @@
+artifacts_root: artifacts
+
+data_ingestion:
+  root_dir: artifacts/data_ingestion
+
+  # keep optional (fallback if needed)
+  source_url: https://drive.google.com/file/d/1bo0OC0oT2o8lx7d5fBmVMEyOtBMMCBp2/view?usp=sharing
+
+  local_data_file: artifacts/data_ingestion/xray.zip
+  unzip_dir: artifacts/data_ingestion
+
+  # AWS fields
+  bucket_name: chest-xray-ahmed-2026
+  object_key: data/xray.zip
+  region_name: us-east-1
