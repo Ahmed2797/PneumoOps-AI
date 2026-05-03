@@ -21,6 +21,14 @@ step4 :
 
             components/data_ingestion.py
 
+step5 :
+    entity/config.py
+    constant/__init__.py
+    yamlfile/config.yamlfile
+    configeration/__init__.py
+
+            components/prepare_basemodel.py
+
 
 
 ## use aws
