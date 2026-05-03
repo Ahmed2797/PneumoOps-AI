@@ -1,4 +1,5 @@
-from src.entity.config import Data_Ingestion_Config
+from src.entity.config import (Data_Ingestion_Config,
+                               Prepare_Basemodel_Config)
 from src.utils import read_yaml, create_directories
 from src.exception import CustomException
 from src.logger import logging
@@ -76,4 +77,48 @@ class Configeration_Manager:
         )
         except Exception as e:
             raise CustomException(e, sys)
+        
+    
+        
+    def get_prepare_base_model_config(self)-> Prepare_Basemodel_Config:
+        """
+        Creates and returns the Prepare_Basemodel_Config object 
+        by reading values from the config YAML file.
+
+        Returns:
+            Prepare_Basemodel_Config: Configuration object for base model preparation.
+
+        Steps:
+            - Extract prepare base model section from config YAML
+            - Ensure root directory exists
+            - Populate Prepare_Basemodel_Config dataclass with YAML values
+
+        Raises:
+            CustomException: If extraction or object creation fails.
+        """
+        try:
+            config = self.config.prepare_base_model
+
+            # Create root directory for base model preparation
+            create_directories([config.root_dir])
+
+            prepare_base_model_config = Prepare_Basemodel_Config(
+            root_dir=config.root_dir,
+            base_model=config.base_model,
+            update_base_model=config.update_base_model,
+            param_image_size=self.param.IMG_SIZE, 
+            param_batch_size=self.param.BATCH_SIZE,
+            param_epochs=self.param.EPOCHS, 
+            param_learning_rate=self.param.LEARNING_RATE, 
+            param_classics=self.param.CLASSICS, 
+            param_weight=self.param.WEIGHTS, 
+            param_include_top=self.param.INCLUDETOP
+            
+            )
+        
+            return prepare_base_model_config
+        except Exception as e:
+            raise CustomException(e, sys)
+
+
  
