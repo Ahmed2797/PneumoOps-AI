@@ -2,6 +2,7 @@ logs
 running_logs
 artifacts
 chest-xray
+final_model
 
 
 # Byte-compiled / optimized / DLL files
