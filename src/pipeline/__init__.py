@@ -4,6 +4,7 @@ import sys
 from src.components.data_ingestion import Data_Ingestion
 from src.components.prepare_basemodel import Prepare_Segmentation_Model
 from src.components.callbacks import Call_Backs
+from src.components.model_trainer import Training
 
 from src.configeration import Configeration_Manager
 from src.exception import CustomException
@@ -100,7 +101,32 @@ class Training_Pipeline:
             raise CustomException(e, sys)
  
     
+    def run_model_training(self, callbacks):
+        """
+        Execute the model training pipeline.
+        
+        Steps:
+        - Load the prepared base model.
+        - Create training and validation data generators.
+        - Train the model using the specified callbacks.
+        - Save the final trained model to disk.
+        
+        Note: This method assumes that the base model has already been prepared
+        and that the data generators are properly set up to read from the ingested dataset.
 
+        Args:
+            callbacks (list): List of Keras callbacks to use during training."""
+        
+        try:
+            logging.info(">>>>>>> Model Training started <<<<<<<<<")
+            training_config = self.config.get_training_config()
+            trainer = Training(config=training_config)
+            trainer.get_base_model()
+            train_data, val_data = trainer.train_valid_generator()
+            trainer.train(train_data=train_data, val_data=val_data, callbacks=callbacks)
+            logging.info(">>>>>>> Model Training completed <<<<<<<<<")
+        except Exception as e:
+            raise CustomException(e, sys)
 
 
     def run(self):
@@ -119,6 +145,7 @@ class Training_Pipeline:
             # self.run_data_ingestion()
             self.run_prepare_base_model()
             callbacks = self.run_prepare_callbacks()
+            self.run_model_training(callbacks=callbacks)
         
             logging.info(">>>>>>> Training Pipeline completed <<<<<<<<<")
         except Exception as e:
