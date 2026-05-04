@@ -29,6 +29,14 @@ step5 :
 
             components/prepare_basemodel.py
 
+step6 :
+    entity/config.py
+    constant/__init__.py
+    yamlfile/config.yamlfile
+    configeration/__init__.py
+
+            components/callbacks.py
+
 
 
 ## use aws
