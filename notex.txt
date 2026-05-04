@@ -37,6 +37,14 @@ step6 :
 
             components/callbacks.py
 
+step5 :
+    entity/config.py
+    constant/__init__.py
+    yamlfile/config.yamlfile
+    configeration/__init__.py
+
+            components/model_trainer.py
+
 
 
 ## use aws
