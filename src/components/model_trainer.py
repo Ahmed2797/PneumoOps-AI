@@ -133,18 +133,18 @@ class Training:
                 model=self.model
             )
 
+            create_directories(["final_model"])
+            final_model_dir = Path("final_model")
+            self.save_model(path=final_model_dir / "modelbest.keras", model=self.model)
+
             # # ✅ Upload BEST model to S3
-            best_model_path = "artifacts/best_model/model.keras"
+            best_model_path = "final_model/modelbest.keras"
 
             uploader = S3Uploader(
                 bucket_name="chest-xray-ahmed-2026",
                 object_key="models/best_model.keras"
             )
             uploader.upload_to_s3(best_model_path)
-
-            create_directories(["final_model"])
-            final_model_dir = Path("final_model")
-            self.save_model(path=final_model_dir / "model.keras", model=self.model)
 
             logging.info("Training completed successfully.")
             return history
