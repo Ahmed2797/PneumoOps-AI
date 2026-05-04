@@ -3,6 +3,7 @@ import sys
 
 from src.components.data_ingestion import Data_Ingestion
 from src.components.prepare_basemodel import Prepare_Segmentation_Model
+from src.components.callbacks import Call_Backs
 
 from src.configeration import Configeration_Manager
 from src.exception import CustomException
@@ -51,7 +52,6 @@ class Training_Pipeline:
             raise CustomException(e, sys)
         
     
-
     def run_prepare_base_model(self):
         """
         Execute the base model preparation pipeline.
@@ -78,6 +78,28 @@ class Training_Pipeline:
             raise CustomException(e, sys)
         
 
+    def run_prepare_callbacks(self):
+        """
+        Execute the callback preparation pipeline.
+        
+        Steps:
+        - Create TensorBoard and ModelCheckpoint callbacks based on configuration.
+        - Compile a list of callbacks for use in model training.
+        
+        Raises:
+            CustomException: If any part of callback preparation fails.
+        """
+        try:
+            logging.info(">>>>>>> Callback Preparation started <<<<<<<<<")
+            prepare_callback_config = self.config.get_prepare_callback_config()
+            callbacks_manager = Call_Backs(config=prepare_callback_config)
+            callbacks_list = callbacks_manager.get_callbacks()
+            logging.info(">>>>>>> Callback Preparation completed <<<<<<<<<")
+            return callbacks_list
+        except Exception as e:
+            raise CustomException(e, sys)
+ 
+    
 
 
 
@@ -96,6 +118,7 @@ class Training_Pipeline:
             logging.info(">>>>>>> Training Pipeline started <<<<<<<<<")
             # self.run_data_ingestion()
             self.run_prepare_base_model()
+            callbacks = self.run_prepare_callbacks()
         
             logging.info(">>>>>>> Training Pipeline completed <<<<<<<<<")
         except Exception as e:
