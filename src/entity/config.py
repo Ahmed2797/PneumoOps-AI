@@ -28,7 +28,6 @@ class Data_Ingestion_Config:
     region_name: str
 
 
-
 @dataclass(frozen=True)
 class Prepare_Basemodel_Config:
     """
@@ -53,3 +52,27 @@ class Prepare_Basemodel_Config:
     param_weight:str
     param_include_top: bool
 
+
+@dataclass(frozen=True)
+class Prepare_Callback_Config:
+    """
+    Dataclass for storing the configuration required to create callbacks.
+
+    Attributes:
+        root_dir (Path): Base directory for callback-related artifacts.
+        tensorboard_root_log_dir (Path): Directory where TensorBoard logs will be saved.
+        checkpoint_model_filepath (Path): Full filepath where the model checkpoint will be stored.
+    """
+    root_dir: Path
+    tensorboard_root_log_dir: Path
+    checkpoint_model_filepath: Path
+    factor: float = 0.1
+    patience: int = 5
+    min_lr: float = 1e-7
+
+    patience_early_stopping: int = 10
+    restore_best_weights: bool = True
+    verbose_early_stopping: int = 1
+    checkpoint_monitor: str = 'val_loss'
+    checkpoint_save_best_only: bool = True
+    checkpoint_verbose: int = 1
