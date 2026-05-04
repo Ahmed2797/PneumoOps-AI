@@ -10,6 +10,7 @@ from src.logger import logging
 from src.components.prepare_basemodel import total_loss, dice_coef
 from src.configeration import Configeration_Manager
 from src.components.callbacks import Call_Backs
+from src.cloud.aws_servies import S3Uploader
 
 
 
@@ -131,6 +132,15 @@ class Training:
                 path=self.config.trained_model_path,
                 model=self.model
             )
+
+            # # ✅ Upload BEST model to S3
+            best_model_path = "artifacts/best_model/model.keras"
+
+            uploader = S3Uploader(
+                bucket_name="chest-xray-ahmed-2026",
+                object_key="models/best_model.keras"
+            )
+            uploader.upload_to_s3(best_model_path)
 
             create_directories(["final_model"])
             final_model_dir = Path("final_model")
