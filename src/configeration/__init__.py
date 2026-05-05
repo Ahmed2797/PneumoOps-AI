@@ -1,7 +1,8 @@
 from src.entity.config import (Data_Ingestion_Config,
                                Prepare_Basemodel_Config,
                                Prepare_Callback_Config,
-                               Training_Config)
+                               Training_Config,
+                               Model_Evaluation_Config)
 from src.utils import read_yaml, create_directories
 from src.exception import CustomException
 from src.logger import logging
@@ -210,3 +211,47 @@ class Configeration_Manager:
         return training_config
 
   
+       
+    def get_model_evaluation_config(self) -> Model_Evaluation_Config:
+        """
+        Create and return the Model_Evaluation_Config dataclass.
+
+        This method:
+            1. Reads the model evaluation section from the main config.
+            2. Ensures all required directories exist.
+            3. Converts string paths to Path objects for OS-independent handling.
+            4. Returns a fully populated Model_Evaluation_Config object.
+        
+        Returns:
+            Model_Evaluation_Config: Dataclass containing paths, MLflow info, params, 
+                                and evaluation-specific settings.
+        """
+        config = self.config.model_evaluation
+
+        # Ensure directories exist
+        create_directories([
+            Path(config.root_dir),
+            Path(config.scores_file_dir)
+        ])
+
+        # Build evaluation config
+        model_evaluation_config = Model_Evaluation_Config(
+            root_dir=Path(config.root_dir),
+            report_file_dir=Path(config.report_file_dir),
+            report_file_path=Path(config.report_file_path),
+            report_file=config.report_file,
+            threshold_accuracy=config.threshold_accuracy,
+            scores_file_dir=Path(config.scores_file_dir),
+            scores_file=config.scores_file,
+            mlflow_tracking_uri=config.mlflow_tracking_uri,
+            mlflow_experiment_name=config.mlflow_experiment_name,
+            all_params=self.param.to_dict(),
+            param_image_size=self.param.IMG_SIZE,
+            param_batch_size=self.param.BATCH_SIZE,
+            training_data=Path(
+                self.config.data_ingestion.unzip_dir
+            ) / "validation_dataset"
+        )
+
+        return model_evaluation_config
+      
