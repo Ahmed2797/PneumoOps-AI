@@ -37,13 +37,21 @@ step6 :
 
             components/callbacks.py
 
-step5 :
+step7 :
     entity/config.py
     constant/__init__.py
     yamlfile/config.yamlfile
     configeration/__init__.py
 
             components/model_trainer.py
+
+step8 :
+    entity/config.py
+    constant/__init__.py
+    yamlfile/config.yamlfile
+    configeration/__init__.py
+
+            components/model_evalution.py
 
 
 
