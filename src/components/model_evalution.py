@@ -1,25 +1,23 @@
 import sys
+from glob import glob
+from pathlib import Path
+
+import dagshub
+import mlflow
 import numpy as np
 import tensorflow as tf
-from pathlib import Path
-from glob import glob
+from mlflow.models import infer_signature
 from sklearn.model_selection import train_test_split
 
+from src.components.prepare_basemodel import (dice_coef, dice_loss, focal_loss,
+                                              total_loss)
 from src.configeration import Configeration_Manager
+from src.entity.config import Model_Evaluation_Config
 from src.exception import CustomException
-from src.entity.config import Model_Evaluation_Config
-from src.components.prepare_basemodel import dice_coef,dice_loss,focal_loss,total_loss
-from src.utils import tf_dataset, save_json
 from src.logger import logging
-from src.entity.config import Model_Evaluation_Config
-from src.utils import save_json
+from src.utils import save_json, tf_dataset
 
-
-import mlflow
-from mlflow.models import infer_signature
-import dagshub
-import dagshub
-dagshub.init(repo_owner='Ahmed2797', repo_name='PneumoOps-AI', mlflow=True)
+dagshub.init(repo_owner="Ahmed2797", repo_name="PneumoOps-AI", mlflow=True)
 
 
 class Evaluation:
@@ -36,7 +34,7 @@ class Evaluation:
             training_path = Path(self.config.training_data)
             img_pattern = str(training_path / "images" / "*.png")
             mask_pattern = str(training_path / "masks" / "*.png")
-            
+
             images = sorted(glob(img_pattern))
             masks = sorted(glob(mask_pattern))
 
@@ -48,7 +46,9 @@ class Evaluation:
                 images, masks, test_size=0.2, random_state=42
             )
 
-            val_dataset = tf_dataset(val_x, val_y, batch_size=self.config.param_batch_size, training=False)
+            val_dataset = tf_dataset(
+                val_x, val_y, batch_size=self.config.param_batch_size, training=False
+            )
             return val_dataset
         except Exception as e:
             raise CustomException(e, sys)
@@ -56,12 +56,15 @@ class Evaluation:
     @staticmethod
     def load_model(model_path: Path):
         """Load the trained model with custom objects."""
-        return tf.keras.models.load_model(model_path, custom_objects={
-            'total_loss': total_loss,
-            'dice_coef': dice_coef,
-            'dice_loss': dice_loss,
-            'focal_loss': focal_loss
-        })
+        return tf.keras.models.load_model(
+            model_path,
+            custom_objects={
+                "total_loss": total_loss,
+                "dice_coef": dice_coef,
+                "dice_loss": dice_loss,
+                "focal_loss": focal_loss,
+            },
+        )
 
     def evalution(self):
         """
@@ -72,21 +75,25 @@ class Evaluation:
             model_path = Path("artifacts/training/bestmodel.keras")
             model = self.load_model(model_path)
 
-            logging.info(f"Starting evaluation on validation dataset using {model_path}...")
+            logging.info(
+                f"Starting evaluation on validation dataset using {model_path}..."
+            )
             results = model.evaluate(val_dataset, verbose=0)
             print("Evaluation results (Loss, Dice Coef, Accuracy):")
             print(results)
-            
+
             # Index 0: Loss, Index 1: Dice_Coef, Index 2: Accuracy
             eval_metrics = {
                 "loss": float(results[0]),
                 "dice_score": float(results[1]),
-                "accuracy": float(results[2])
+                "accuracy": float(results[2]),
             }
-            
-            logging.info(f"Results -> Loss: {eval_metrics['loss']:.4f}, "
-                         f"Dice: {eval_metrics['dice_score']:.4f}, "
-                         f"Acc: {eval_metrics['accuracy']:.4f}")
+
+            logging.info(
+                f"Results -> Loss: {eval_metrics['loss']:.4f}, "
+                f"Dice: {eval_metrics['dice_score']:.4f}, "
+                f"Acc: {eval_metrics['accuracy']:.4f}"
+            )
 
             # ৫. Save scores.json
             scores_path = Path(self.config.scores_file_dir) / self.config.scores_file
@@ -126,23 +133,28 @@ class Evaluation:
                 model=model,
                 artifact_path="model_evaluation",
                 signature=signature,
-                registered_model_name="PneumoOPS_V1"
+                registered_model_name="PneumoOPS_V1",
             )
-        
+
             logging.info("MLflow logging complete with Model Signature.")
-            
+
     def run_evaluation_pipeline(self):
         """Orchestrate the entire evaluation process."""
         results = self.evalution()
-        
+
         # Save JSON/YAML reports
-        save_json(path=Path(self.config.scores_file_dir) / self.config.scores_file, data=results)
-        
+        save_json(
+            path=Path(self.config.scores_file_dir) / self.config.scores_file,
+            data=results,
+        )
+
         # Log to MLflow
         if self.config.mlflow_tracking_uri:
             self.log_mlflow(results=results)
         else:
-            logging.warning("MLflow tracking URI not provided. Skipping MLflow logging.")
+            logging.warning(
+                "MLflow tracking URI not provided. Skipping MLflow logging."
+            )
 
 
 if __name__ == "__main__":
@@ -154,4 +166,3 @@ if __name__ == "__main__":
         evaluator.run_evaluation_pipeline()
     except Exception as e:
         raise CustomException(e, sys)
-    
