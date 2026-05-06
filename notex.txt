@@ -62,3 +62,7 @@ step8 :
 3. 
 
 ECR REPO : 520551197421.dkr.ecr.us-east-1.amazonaws.com/chestxray
+
+## flake8 linting issues
+pip install black isort flake8
+flake8 .
