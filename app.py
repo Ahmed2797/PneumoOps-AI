@@ -1,23 +1,28 @@
 import os
 import tempfile
+
 import cv2
 import numpy as np
 import streamlit as st
+
 from src.components.inferance import Prediction_Pipeline
 
 MODEL_PATH = "final_model/best_chest_xray_model.keras"
+
 
 def build_overlay(original_img: np.ndarray, mask: np.ndarray) -> np.ndarray:
     mask_binary = (mask > 0).astype(np.uint8)
     # Using a slightly more clinical "Cyan" overlay instead of pure Red
     overlay_layer = np.zeros_like(original_img)
-    overlay_layer[:, :, 1] = mask_binary * 255 # Green Channel
-    overlay_layer[:, :, 2] = mask_binary * 200 # Hint of Blue
+    overlay_layer[:, :, 1] = mask_binary * 255  # Green Channel
+    overlay_layer[:, :, 2] = mask_binary * 200  # Hint of Blue
     return cv2.addWeighted(original_img, 0.8, overlay_layer, 0.4, 0)
+
 
 @st.cache_resource
 def load_pipeline(model_path: str) -> Prediction_Pipeline:
     return Prediction_Pipeline(model_path=model_path)
+
 
 def main() -> None:
     st.set_page_config(
@@ -27,7 +32,8 @@ def main() -> None:
     )
 
     # --- UNIQUE GLASSMORPHIC CSS ---
-    st.markdown("""
+    st.markdown(
+        """
         <style>
             /* Main Background */
             .stApp {
@@ -97,11 +103,19 @@ def main() -> None:
                 border-right: 1px solid rgba(255, 255, 255, 0.1);
             }
         </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # --- HEADER SECTION ---
-    st.markdown('<div class="main-title">PNEUMOSCAN<span style="color:#f8fafc">.AI</span></div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Advanced Thoracic Pathology Segmentation</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="main-title">PNEUMOSCAN<span style="color:#f8fafc">.AI</span></div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="sub-title">Advanced Thoracic Pathology Segmentation</div>',
+        unsafe_allow_html=True,
+    )
 
     if not os.path.exists(MODEL_PATH):
         st.error(f"Critical Error: Neural weights not found at `{MODEL_PATH}`")
@@ -114,21 +128,25 @@ def main() -> None:
         st.markdown("### 🛠️ Configuration")
         threshold = st.slider(
             "Confidence Sensitivity",
-            0.05, 0.95, 0.20, 0.05,
-            help="Adjusting the sensitivity changes the detection strictness."
+            0.05,
+            0.95,
+            0.20,
+            0.05,
+            help="Adjusting the sensitivity changes the detection strictness.",
         )
         st.markdown("---")
         st.markdown("### 📂 Data Source")
         uploaded_file = st.file_uploader(
-            "Load Chest Radiograph",
-            type=["png", "jpg", "jpeg"]
+            "Load Chest Radiograph", type=["png", "jpg", "jpeg"]
         )
         st.markdown("---")
         st.caption("v2.4.1 | Clinical Decision Support Tool")
 
     # --- MAIN CONTENT ---
     if uploaded_file is None:
-        st.info("System Ready. Please upload a chest X-ray in the sidebar to begin analysis.")
+        st.info(
+            "System Ready. Please upload a chest X-ray in the sidebar to begin analysis."
+        )
         return
 
     # Trigger Analysis
@@ -141,14 +159,16 @@ def main() -> None:
     else:
         file_suffix = os.path.splitext(uploaded_file.name)[1] or ".png"
         temp_path = None
-        
+
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix) as tmp:
                 tmp.write(uploaded_file.getbuffer())
                 temp_path = tmp.name
 
             with st.spinner("🧠 AI is analyzing pulmonary regions..."):
-                original_img, mask, detection_img = pipeline.predict(temp_path, threshold=threshold)
+                original_img, mask, detection_img = pipeline.predict(
+                    temp_path, threshold=threshold
+                )
 
             # Calculation
             mask_binary = (mask > 0).astype(np.uint8)
@@ -158,7 +178,7 @@ def main() -> None:
             # --- RESULTS DASHBOARD ---
             st.markdown("### 📊 Diagnostic Metrics")
             m_col1, m_col2, m_col3 = st.columns(3)
-            
+
             with m_col1:
                 st.metric("Area of Involvement", f"{affected_area_pct:.2f}%")
             with m_col2:
@@ -170,29 +190,44 @@ def main() -> None:
                 st.metric("Model Certainty", "HIGH" if affected_area_pct > 0 else "N/A")
 
             st.markdown("---")
-            
+
             # Visual Tabs for clean UI
             tab1, tab2 = st.tabs(["🎯 ANALYSIS VIEW", "🔍 SEGMENTATION VIEW"])
-            
+
             with tab1:
                 t1_col1, t1_col2 = st.columns(2)
                 with t1_col1:
-                    st.image(detection_img, caption="AI Bounding Box", use_container_width=True)
+                    st.image(
+                        detection_img,
+                        caption="AI Bounding Box",
+                        use_container_width=True,
+                    )
                 with t1_col2:
-                    st.image(overlay_img, caption="Pathology Heatmap Overlay", use_container_width=True)
+                    st.image(
+                        overlay_img,
+                        caption="Pathology Heatmap Overlay",
+                        use_container_width=True,
+                    )
 
             with tab2:
                 t2_col1, t2_col2 = st.columns(2)
                 with t2_col1:
-                    st.image(original_img, caption="Original X-ray", use_container_width=True)
+                    st.image(
+                        original_img, caption="Original X-ray", use_container_width=True
+                    )
                 with t2_col2:
-                    st.image((mask_binary * 255), caption="Raw AI Binary Mask", use_container_width=True)
+                    st.image(
+                        (mask_binary * 255),
+                        caption="Raw AI Binary Mask",
+                        use_container_width=True,
+                    )
 
         except Exception as e:
             st.error(f"Pipeline Error: {e}")
         finally:
             if temp_path and os.path.exists(temp_path):
                 os.remove(temp_path)
+
 
 if __name__ == "__main__":
     main()
