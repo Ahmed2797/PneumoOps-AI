@@ -1,24 +1,23 @@
+import base64
+import json
 import os
 import sys
-import json
-import yaml
-import base64
-import joblib
-import tensorflow as tf
-
 from pathlib import Path
 from typing import Any
 
+import joblib
+import tensorflow as tf
+import yaml
 from box import ConfigBox
 from ensure import ensure_annotations
 
-from src.logger import logging
 from src.exception import CustomException
-
+from src.logger import logging
 
 # ============================
 # Y A M L   F U N C T I O N S
 # ============================
+
 
 @ensure_annotations
 def read_yaml(path_to_yaml: Path) -> ConfigBox:
@@ -52,6 +51,7 @@ def read_yaml(path_to_yaml: Path) -> ConfigBox:
 # D I R E C T O R I E S
 # ====================================
 
+
 @ensure_annotations
 def create_directories(path_to_directories: list, verbose: bool = True):
     """
@@ -77,6 +77,7 @@ def create_directories(path_to_directories: list, verbose: bool = True):
 # =============================
 # J S O N
 # =============================
+
 
 @ensure_annotations
 def save_json(path: Path, data: dict):
@@ -128,6 +129,7 @@ def load_json(path: Path) -> ConfigBox:
 # B I N A R Y
 # ===============================
 
+
 @ensure_annotations
 def save_bin(data: Any, path: Path):
     """
@@ -173,6 +175,7 @@ def load_bin(path: Path) -> Any:
 # U T I L S
 # ==================
 
+
 @ensure_annotations
 def get_size(path: Path) -> str:
     """
@@ -201,6 +204,7 @@ def get_size(path: Path) -> str:
 # ===============================
 # BASE64 IMAGE FUNCTIONS
 # ===============================
+
 
 @ensure_annotations
 def decodeImage(imgstring: str, fileName: str) -> None:
@@ -254,6 +258,7 @@ def encodeImageIntoBase64(croppedImagePath: str) -> bytes:
 # ===============================
 # TENSORFLOW DATA PIPELINE
 # ===============================
+
 
 def parse_data(img_path, mask_path):
     """
