@@ -1,16 +1,17 @@
 import os
-import zipfile
-import boto3
-import tempfile
-from pathlib import Path
-from dotenv import load_dotenv
-from botocore.exceptions import ClientError
-
-from src.logger import logging
-from src.exception import CustomException
-from src.utils import get_size
-from src.entity.config import Data_Ingestion_Config
 import sys
+import tempfile
+import zipfile
+from pathlib import Path
+
+import boto3
+from botocore.exceptions import ClientError
+from dotenv import load_dotenv
+
+from src.entity.config import Data_Ingestion_Config
+from src.exception import CustomException
+from src.logger import logging
+from src.utils import get_size
 
 load_dotenv()
 
@@ -27,10 +28,7 @@ class Data_Ingestion:
             """
             Create S3 client using environment variables or IAM role
             """
-            return boto3.client(
-                "s3",
-                region_name=self.config.region_name
-            )
+            return boto3.client("s3", region_name=self.config.region_name)
         except Exception as e:
             raise CustomException(e, sys)
 
@@ -88,9 +86,9 @@ class Data_Ingestion:
 
             elif code in ["PermanentRedirect", "301", "AuthorizationHeaderMalformed"]:
                 try:
-                    loc = s3.get_bucket_location(
-                        Bucket=self.config.bucket_name
-                    )["LocationConstraint"]
+                    loc = s3.get_bucket_location(Bucket=self.config.bucket_name)[
+                        "LocationConstraint"
+                    ]
 
                     retry_region = loc or "us-east-1"
 
