@@ -1,12 +1,13 @@
 import os
+from urllib.parse import parse_qs, urlparse
+
 import boto3
 import gdown
-from dotenv import load_dotenv
-from urllib.parse import urlparse, parse_qs
 from botocore.exceptions import ClientError
+from dotenv import load_dotenv
 
-from src.logger import logging
 from src.exception import CustomException
+from src.logger import logging
 
 load_dotenv()
 
@@ -17,10 +18,7 @@ class GDriveToS3Uploader:
             self.bucket_name = bucket_name
             self.object_key = object_key
 
-            self.s3 = boto3.client(
-                "s3",
-                region_name=os.getenv("AWS_REGION")
-            )
+            self.s3 = boto3.client("s3", region_name=os.getenv("AWS_REGION"))
 
             logging.info("S3 client initialized successfully")
 
@@ -49,9 +47,7 @@ class GDriveToS3Uploader:
             logging.info("Starting download from Google Drive...")
 
             output = gdown.download(
-                f"https://drive.google.com/uc?id={file_id}",
-                output_path,
-                quiet=False
+                f"https://drive.google.com/uc?id={file_id}", output_path, quiet=False
             )
 
             if output is None or not os.path.exists(output_path):
@@ -67,11 +63,7 @@ class GDriveToS3Uploader:
         try:
             logging.info(f"Uploading file to S3 bucket: {self.bucket_name}")
 
-            self.s3.upload_file(
-                file_path,
-                self.bucket_name,
-                self.object_key
-            )
+            self.s3.upload_file(file_path, self.bucket_name, self.object_key)
 
             logging.info("Upload completed successfully!")
 
@@ -87,7 +79,7 @@ class GDriveToS3Uploader:
         try:
             logging.info("🚀 Starting Google Drive → S3 pipeline")
             print("🚀 Starting Google Drive → S3 pipeline")
-            
+
             self.download_from_gdrive(gdrive_url, local_path)
             self.upload_to_s3(local_path)
 
@@ -105,16 +97,15 @@ if __name__ == "__main__":
 
     try:
         uploader = GDriveToS3Uploader(
-            bucket_name="chest-xray-ahmed-2026",
-            object_key="data/xray.zip"
+            bucket_name="chest-xray-ahmed-2026", object_key="data/xray.zip"
         )
 
         uploader.run(
             gdrive_url="https://drive.google.com/file/d/1bo0OC0oT2o8lx7d5fBmVMEyOtBMMCBp2/view?usp=sharing",
-            local_path="artifacts/data_ingestion/xray.zip"
+            local_path="artifacts/data_ingestion/xray.zip",
         )
 
     except Exception as e:
         raise CustomException(e, sys)
-    
+
 ## python gdown_push_s3.py
