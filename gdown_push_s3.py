@@ -19,7 +19,7 @@ class GDriveToS3Uploader:
 
             self.s3 = boto3.client(
                 "s3",
-                region_name=os.getenv("AWS_DEFAULT_REGION")
+                region_name=os.getenv("AWS_REGION")
             )
 
             logging.info("S3 client initialized successfully")
