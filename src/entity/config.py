@@ -1,5 +1,5 @@
-from dataclasses import dataclass 
-from pathlib import Path 
+from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass(frozen=True)
@@ -41,15 +41,16 @@ class Prepare_Basemodel_Config:
         param_batch_size (int): Batch size for training.
         param_epochs (int): Number of epochs for training.
     """
+
     root_dir: Path
     base_model: Path
-    update_base_model: Path 
+    update_base_model: Path
     param_image_size: list
     param_batch_size: int
-    param_epochs: int 
+    param_epochs: int
     param_learning_rate: float
     param_classics: int
-    param_weight:str
+    param_weight: str
     param_include_top: bool
 
 
@@ -63,6 +64,7 @@ class Prepare_Callback_Config:
         tensorboard_root_log_dir (Path): Directory where TensorBoard logs will be saved.
         checkpoint_model_filepath (Path): Full filepath where the model checkpoint will be stored.
     """
+
     root_dir: Path
     tensorboard_root_log_dir: Path
     checkpoint_model_filepath: Path
@@ -73,7 +75,7 @@ class Prepare_Callback_Config:
     patience_early_stopping: int = 10
     restore_best_weights: bool = True
     verbose_early_stopping: int = 1
-    checkpoint_monitor: str = 'val_loss'
+    checkpoint_monitor: str = "val_loss"
     checkpoint_save_best_only: bool = True
     checkpoint_verbose: int = 1
 
@@ -91,15 +93,16 @@ class Training_Config:
         param_image_size (list): List of image sizes for training.
         param_batch_size (int): Batch size for training.
         param_epochs (int): Number of epochs for training.
-    """ 
+    """
+
     root_dir: Path
     trained_model_path: Path
-    update_base_model: Path 
+    update_base_model: Path
     training_data: Path
     param_image_size: list
     param_batch_size: int
-    param_epochs: int 
-    params_augmentation: bool 
+    param_epochs: int
+    params_augmentation: bool
     param_learning_rate: float
 
 
@@ -123,6 +126,7 @@ class Model_Evaluation_Config:
         param_batch_size (int): Batch size used during evaluation.
         training_data_path (Path): Path to the validation dataset for model evaluation.
     """
+
     root_dir: Path
     report_file_path: Path
     report_file_dir: Path
@@ -138,5 +142,4 @@ class Model_Evaluation_Config:
     all_params: dict
     param_image_size: list
     param_batch_size: int
-    threshold_accuracy: float 
-     
+    threshold_accuracy: float
