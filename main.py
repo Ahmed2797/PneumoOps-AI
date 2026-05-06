@@ -1,7 +1,7 @@
-from src.pipeline import Training_Pipeline 
-from src.exception import CustomException
 import sys
 
+from src.exception import CustomException
+from src.pipeline import Training_Pipeline
 
 if __name__ == "__main__":
     try:
