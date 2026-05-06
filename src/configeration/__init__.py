@@ -6,7 +6,7 @@ from src.entity.config import (Data_Ingestion_Config,
 from src.utils import read_yaml, create_directories
 from src.exception import CustomException
 from src.logger import logging
-from src.constants import *
+from src.constants import CONFIG_YAML_FILE,PARAM_YAML_FILE
 from pathlib import Path
 import sys
 import os
