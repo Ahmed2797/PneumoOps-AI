@@ -1,12 +1,11 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
-from src.components.data_ingestion import Data_Ingestion
-from src.components.prepare_basemodel import Prepare_Segmentation_Model
 from src.components.callbacks import Call_Backs
-from src.components.model_trainer import Training
+from src.components.data_ingestion import Data_Ingestion
 from src.components.model_evalution import Evaluation
-
+from src.components.model_trainer import Training
+from src.components.prepare_basemodel import Prepare_Segmentation_Model
 from src.configeration import Configeration_Manager
 from src.exception import CustomException
 from src.logger import logging
@@ -20,7 +19,7 @@ class Training_Pipeline:
     - Callback creation
     - Model training
     - Model evaluation
-    
+
     This class executes each pipeline step sequentially using configurations
     provided by the ConfigerationManager.
     """
@@ -32,15 +31,14 @@ class Training_Pipeline:
         """
         self.config = Configeration_Manager()
 
-
     def run_data_ingestion(self):
         """
         Execute the data ingestion pipeline.
-        
+
         Steps:
         - Download the dataset from the specified URL.
         - Extract the downloaded zip file.
-        
+
         Raises:
             CustomException: If any part of ingestion fails.
         """
@@ -52,42 +50,41 @@ class Training_Pipeline:
             logging.info(">>>>>>> Data Ingestion completed <<<<<<<<<")
         except Exception as e:
             raise CustomException(e, sys)
-        
-    
+
     def run_prepare_base_model(self):
         """
         Execute the base model preparation pipeline.
-        
+
         Steps:
         - Build the ResNet50 U-Net model architecture.
         - Compile the model with the specified loss and metrics.
         - Save the prepared model to disk.
-        
+
         Raises:
             CustomException: If any part of model preparation fails.
         """
         try:
             logging.info(">>>>>>> Base Model Preparation started <<<<<<<<<")
             prepare_base_model_config = self.config.get_prepare_base_model_config()
-            model_preparer = Prepare_Segmentation_Model(config=prepare_base_model_config)
+            model_preparer = Prepare_Segmentation_Model(
+                config=prepare_base_model_config
+            )
             unet_model = model_preparer.build_resnet50_unet()
             model_preparer.save_model(
-                path=Path(prepare_base_model_config.update_base_model), 
-                model=unet_model
+                path=Path(prepare_base_model_config.update_base_model), model=unet_model
             )
             logging.info(">>>>>>> Base Model Preparation completed <<<<<<<<<")
         except Exception as e:
             raise CustomException(e, sys)
-        
 
     def run_prepare_callbacks(self):
         """
         Execute the callback preparation pipeline.
-        
+
         Steps:
         - Create TensorBoard and ModelCheckpoint callbacks based on configuration.
         - Compile a list of callbacks for use in model training.
-        
+
         Raises:
             CustomException: If any part of callback preparation fails.
         """
@@ -100,24 +97,23 @@ class Training_Pipeline:
             return callbacks_list
         except Exception as e:
             raise CustomException(e, sys)
- 
-    
+
     def run_model_training(self, callbacks):
         """
         Execute the model training pipeline.
-        
+
         Steps:
         - Load the prepared base model.
         - Create training and validation data generators.
         - Train the model using the specified callbacks.
         - Save the final trained model to disk.
-        
+
         Note: This method assumes that the base model has already been prepared
         and that the data generators are properly set up to read from the ingested dataset.
 
         Args:
             callbacks (list): List of Keras callbacks to use during training."""
-        
+
         try:
             logging.info(">>>>>>> Model Training started <<<<<<<<<")
             training_config = self.config.get_training_config()
@@ -128,19 +124,17 @@ class Training_Pipeline:
             logging.info(">>>>>>> Model Training completed <<<<<<<<<")
         except Exception as e:
             raise CustomException(e, sys)
-        
-    
 
     def run_model_evaluation(self):
         """
         Execute the model evaluation pipeline.
-        
+
         Steps:
         - Load the trained model from disk.
         - Create a validation dataset generator.
         - Evaluate the model on the validation dataset.
         - Log evaluation results to MLflow and save scores to JSON.
-        
+
         Raises:
             CustomException: If any part of model evaluation fails.
         """
@@ -154,8 +148,6 @@ class Training_Pipeline:
         except Exception as e:
             raise CustomException(e, sys)
 
-
-
     def run(self):
         """
         Execute the full ML pipeline in order:
@@ -163,7 +155,7 @@ class Training_Pipeline:
         2. Base model preparation
         3. Model training
         4. Model evaluation
-        
+
         Raises:
             CustomException: If any stage of the pipeline fails.
         """
@@ -177,5 +169,3 @@ class Training_Pipeline:
             logging.info(">>>>>>> Training Pipeline completed <<<<<<<<<")
         except Exception as e:
             raise CustomException(e, sys)
-
-
