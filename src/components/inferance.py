@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import tensorflow as tf
+from pathlib import Path
 import matplotlib.pyplot as plt
 
 class Prediction_Pipeline:
@@ -84,8 +85,9 @@ class Prediction_Pipeline:
 if __name__ == "__main__":
     # Demonstration of the prediction pipeline
     try:
-        pipeline = Prediction_Pipeline(model_path="final_model/best_chest_xray_model.h5")
-        test_img_path = "artifacts/data_ingestion/validation_dataset/images/7_test_1_.png" 
+        # pipeline = Prediction_Pipeline(model_path="final_model/modelbest.keras")
+        pipeline = Prediction_Pipeline(model_path="final_model/best_chest_xray_model.keras")
+        test_img_path = "chest-xray/0_test_1_.png" 
         
         orig, mask, result = pipeline.predict(test_img_path)
 
@@ -118,4 +120,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Prediction failed with error: {e}")
 
-## src/components/inferance.py
+## python src/components/inferance.py
