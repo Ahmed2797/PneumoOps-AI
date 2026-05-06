@@ -1,24 +1,26 @@
 import sys
-import tensorflow as tf
-from pathlib import Path
 from glob import glob
-from sklearn.model_selection import train_test_split
-from src.exception import CustomException
-from src.entity.config import Training_Config
-from src.utils import create_directories, tf_dataset
-from src.logger import logging
-from src.components.prepare_basemodel import total_loss, dice_coef
-from src.configeration import Configeration_Manager
-from src.components.callbacks import Call_Backs
-from src.cloud.aws_servies import S3Uploader
+from pathlib import Path
 
+import tensorflow as tf
+from sklearn.model_selection import train_test_split
+
+from src.cloud.aws_servies import S3Uploader
+from src.components.callbacks import Call_Backs
+from src.components.prepare_basemodel import dice_coef, total_loss
+from src.configeration import Configeration_Manager
+from src.entity.config import Training_Config
+from src.exception import CustomException
+from src.logger import logging
+from src.utils import create_directories, tf_dataset
 
 
 class Training:
     """
-    Handles the model training lifecycle, including data preparation, 
+    Handles the model training lifecycle, including data preparation,
     model compilation, and execution of the training loop.
     """
+
     def __init__(self, config: Training_Config):
         """
         Initializes the Training class with configuration parameters.
@@ -31,7 +33,7 @@ class Training:
 
     def get_base_model(self):
         """
-        Loads the pre-defined base model from disk and compiles it with 
+        Loads the pre-defined base model from disk and compiles it with
         specified optimizer, loss function, and metrics.
 
         Raises:
@@ -39,19 +41,23 @@ class Training:
         """
         try:
             logging.info("Loading and compiling the base model...")
-            self.model = tf.keras.models.load_model(str(self.config.update_base_model), compile=False)
-            
+            self.model = tf.keras.models.load_model(
+                str(self.config.update_base_model), compile=False
+            )
+
             self.model.compile(
-                optimizer=tf.keras.optimizers.Adam(learning_rate=self.config.param_learning_rate),
+                optimizer=tf.keras.optimizers.Adam(
+                    learning_rate=self.config.param_learning_rate
+                ),
                 loss=total_loss,
-                metrics=[dice_coef, 'accuracy']
+                metrics=[dice_coef, "accuracy"],
             )
         except Exception as e:
             raise CustomException(e, sys)
 
     def train_valid_generator(self):
         """
-        Discovers image and mask files, performs a train-test split, 
+        Discovers image and mask files, performs a train-test split,
         and wraps them into high-performance tf.data.Dataset objects.
 
         Returns:
@@ -64,7 +70,7 @@ class Training:
             training_path = Path(self.config.training_data)
             img_pattern = str(training_path / "images" / "*.png")
             mask_pattern = str(training_path / "masks" / "*.png")
-            
+
             images = sorted(glob(img_pattern))
             masks = sorted(glob(mask_pattern))
 
@@ -75,11 +81,15 @@ class Training:
                 images, masks, test_size=0.2, random_state=42
             )
 
-            train_dataset = tf_dataset(train_x, train_y, batch_size=self.config.param_batch_size, training=True)
-            val_dataset = tf_dataset(val_x, val_y, batch_size=self.config.param_batch_size, training=False)
+            train_dataset = tf_dataset(
+                train_x, train_y, batch_size=self.config.param_batch_size, training=True
+            )
+            val_dataset = tf_dataset(
+                val_x, val_y, batch_size=self.config.param_batch_size, training=False
+            )
 
             return train_dataset, val_dataset
-        
+
         except Exception as e:
             raise CustomException(e, sys)
 
@@ -88,8 +98,8 @@ class Training:
 
     @staticmethod
     def save_model_path(path: Union[str, Path], model: tf.keras.Model):
-        path = Path(path) 
-        
+        path = Path(path)
+
         # Now .parent will work perfectly
         path.parent.mkdir(parents=True, exist_ok=True)
         model.save(str(path))
@@ -99,9 +109,9 @@ class Training:
         """Save the trained model to the given path."""
         model.save(str(path))
 
-    def train(self,train_data, val_data, callbacks: list = None):
+    def train(self, train_data, val_data, callbacks: list = None):
         """
-        Orchestrates the full training process: loads data, triggers the fit method, 
+        Orchestrates the full training process: loads data, triggers the fit method,
         and saves the final model outputs.
 
         Args:
@@ -125,13 +135,10 @@ class Training:
                 epochs=self.config.param_epochs,
                 validation_data=val_data,
                 callbacks=callbacks,
-                verbose=1
+                verbose=1,
             )
 
-            self.save_model(
-                path=self.config.trained_model_path,
-                model=self.model
-            )
+            self.save_model(path=self.config.trained_model_path, model=self.model)
 
             create_directories(["final_model"])
             final_model_dir = Path("final_model")
@@ -142,18 +149,19 @@ class Training:
 
             uploader = S3Uploader(
                 bucket_name="chest-xray-ahmed-2026",
-                object_key="models/best_model.keras"
+                object_key="models/best_model.keras",
             )
             uploader.upload_to_s3(best_model_path)
 
             logging.info("Training completed successfully.")
             return history
-            
+
         except Exception as e:
             raise CustomException(e, sys)
-        
-if __name__ == '__main__':
-    try:    
+
+
+if __name__ == "__main__":
+    try:
         config = Configeration_Manager()
 
         # Prepare callbacks (optional, uncomment if needed)
@@ -167,7 +175,7 @@ if __name__ == '__main__':
         # Prepare model and data
         trainer.get_base_model()
         train_data, val_data = trainer.train_valid_generator()
-        trainer.train(train_data=train_data,val_data=val_data,callbacks=callback_list)
+        trainer.train(train_data=train_data, val_data=val_data, callbacks=callback_list)
 
     except Exception as e:
         raise CustomException(e, sys)
