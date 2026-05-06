@@ -1,7 +1,9 @@
-import sys
 import json
+import sys
+
 import boto3
 from botocore.exceptions import ClientError
+
 from src.exception import CustomException
 from src.logger import logging
 
@@ -84,11 +86,7 @@ class S3Uploader:
             if as_json:
                 data = json.dumps(data)
 
-            self.s3.put_object(
-                Bucket=self.bucket_name,
-                Key=key,
-                Body=data
-            )
+            self.s3.put_object(Bucket=self.bucket_name, Key=key, Body=data)
 
             logging.info("Write completed successfully!")
 
@@ -133,10 +131,7 @@ class S3Uploader:
         try:
             logging.info(f"Listing files in s3://{self.bucket_name}/{prefix}")
 
-            response = self.s3.list_objects_v2(
-                Bucket=self.bucket_name,
-                Prefix=prefix
-            )
+            response = self.s3.list_objects_v2(Bucket=self.bucket_name, Prefix=prefix)
 
             files = [obj["Key"] for obj in response.get("Contents", [])]
 
