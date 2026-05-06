@@ -1,27 +1,28 @@
-from src.entity.config import (Data_Ingestion_Config,
+import os
+import sys
+from pathlib import Path
+
+from src.constants import CONFIG_YAML_FILE, PARAM_YAML_FILE
+from src.entity.config import (Data_Ingestion_Config, Model_Evaluation_Config,
                                Prepare_Basemodel_Config,
-                               Prepare_Callback_Config,
-                               Training_Config,
-                               Model_Evaluation_Config)
-from src.utils import read_yaml, create_directories
+                               Prepare_Callback_Config, Training_Config)
 from src.exception import CustomException
 from src.logger import logging
-from src.constants import CONFIG_YAML_FILE,PARAM_YAML_FILE
-from pathlib import Path
-import sys
-import os
-
-
+from src.utils import create_directories, read_yaml
 
 
 class Configeration_Manager:
     """
     Manages the loading and parsing of configuration and parameter YAML files.
-    Creates required directories and provides configuration objects 
+    Creates required directories and provides configuration objects
     for different pipeline components.
     """
 
-    def __init__(self, config_filepath: Path = CONFIG_YAML_FILE, param_filepath: Path = PARAM_YAML_FILE):
+    def __init__(
+        self,
+        config_filepath: Path = CONFIG_YAML_FILE,
+        param_filepath: Path = PARAM_YAML_FILE,
+    ):
         """
         Initialize the Configuration Manager.
 
@@ -38,16 +39,17 @@ class Configeration_Manager:
 
             # create_directories expects a LIST of paths
             create_directories([self.config.artifacts_root])
-            
-            logging.info("Configuration Manager initialized and artifacts root created.")
+
+            logging.info(
+                "Configuration Manager initialized and artifacts root created."
+            )
 
         except Exception as e:
             raise CustomException(e, sys)
 
-
     def get_data_ingestion_config(self) -> Data_Ingestion_Config:
         """
-        Creates and returns the Data_Ingestion_Config object 
+        Creates and returns the Data_Ingestion_Config object
         by reading values from the config YAML file.
 
         Returns:
@@ -68,23 +70,21 @@ class Configeration_Manager:
             create_directories([config.root_dir])
 
             return Data_Ingestion_Config(
-            root_dir=Path(config.root_dir),
-            source_url=config.source_url,
-            local_data_file=Path(config.local_data_file),
-            unzip_dir=Path(config.unzip_dir),
-
-            # 🔥 AWS fields
-            bucket_name=config.bucket_name,
-            object_key=config.object_key,
-            region_name=config.region_name,
-        )
+                root_dir=Path(config.root_dir),
+                source_url=config.source_url,
+                local_data_file=Path(config.local_data_file),
+                unzip_dir=Path(config.unzip_dir),
+                # 🔥 AWS fields
+                bucket_name=config.bucket_name,
+                object_key=config.object_key,
+                region_name=config.region_name,
+            )
         except Exception as e:
             raise CustomException(e, sys)
-        
-        
-    def get_prepare_base_model_config(self)-> Prepare_Basemodel_Config:
+
+    def get_prepare_base_model_config(self) -> Prepare_Basemodel_Config:
         """
-        Creates and returns the Prepare_Basemodel_Config object 
+        Creates and returns the Prepare_Basemodel_Config object
         by reading values from the config YAML file.
 
         Returns:
@@ -105,27 +105,25 @@ class Configeration_Manager:
             create_directories([config.root_dir])
 
             prepare_base_model_config = Prepare_Basemodel_Config(
-            root_dir=config.root_dir,
-            base_model=config.base_model,
-            update_base_model=config.update_base_model,
-            param_image_size=self.param.IMG_SIZE, 
-            param_batch_size=self.param.BATCH_SIZE,
-            param_epochs=self.param.EPOCHS, 
-            param_learning_rate=self.param.LEARNING_RATE, 
-            param_classics=self.param.CLASSICS, 
-            param_weight=self.param.WEIGHTS, 
-            param_include_top=self.param.INCLUDETOP
-            
+                root_dir=config.root_dir,
+                base_model=config.base_model,
+                update_base_model=config.update_base_model,
+                param_image_size=self.param.IMG_SIZE,
+                param_batch_size=self.param.BATCH_SIZE,
+                param_epochs=self.param.EPOCHS,
+                param_learning_rate=self.param.LEARNING_RATE,
+                param_classics=self.param.CLASSICS,
+                param_weight=self.param.WEIGHTS,
+                param_include_top=self.param.INCLUDETOP,
             )
-        
+
             return prepare_base_model_config
         except Exception as e:
             raise CustomException(e, sys)
 
-
     def get_prepare_callback_config(self) -> Prepare_Callback_Config:
         """
-        Creates and returns the Prepare_Callback_Config object 
+        Creates and returns the Prepare_Callback_Config object
         by reading values from the config YAML file.
 
         Returns:
@@ -143,54 +141,50 @@ class Configeration_Manager:
             model_ckpt_dir = os.path.dirname(config.checkpoint_model_filepath)
 
             # Ensure required directories exist
-            create_directories([
-                Path(model_ckpt_dir),
-                Path(config.tensorboard_root_log_dir)
-            ])
-
+            create_directories(
+                [Path(model_ckpt_dir), Path(config.tensorboard_root_log_dir)]
+            )
 
             prepare_callback_config = Prepare_Callback_Config(
                 root_dir=config.root_dir,
                 tensorboard_root_log_dir=config.tensorboard_root_log_dir,
-                checkpoint_model_filepath=config.checkpoint_model_filepath
+                checkpoint_model_filepath=config.checkpoint_model_filepath,
             )
-        
+
             return prepare_callback_config
         except Exception as e:
             raise CustomException(e, sys)
-    
 
     def get_training_config(self):
         """
         Create and return the training configuration for the model training step.
 
         This method reads values from the main configuration (`config.yaml`)
-        and parameter settings (`params.yaml`), prepares the required directory 
-        structure, and bundles all training-related settings into a `TrainingConfig` 
-        object. 
-        
-        The returned `TrainingConfig` is later used by the Training Pipeline 
-        to load the base model, set up data generators, apply augmentations, 
+        and parameter settings (`params.yaml`), prepares the required directory
+        structure, and bundles all training-related settings into a `TrainingConfig`
+        object.
+
+        The returned `TrainingConfig` is later used by the Training Pipeline
+        to load the base model, set up data generators, apply augmentations,
         and start the training process.
 
         Returns:
             TrainingConfig: A dataclass object containing all configuration
             required for model training, including:
-                - root directory for training outputs  
-                - final trained model save path  
-                - updated base model file path  
-                - training dataset directory  
-                - image size, batch size, epochs  
-                - augmentation flags  
-                - learning rate  
+                - root directory for training outputs
+                - final trained model save path
+                - updated base model file path
+                - training dataset directory
+                - image size, batch size, epochs
+                - augmentation flags
+                - learning rate
         """
-        training = self.config.training 
+        training = self.config.training
         prepare_base_model = self.config.prepare_base_model
 
         # Path to extracted dataset folder
         trainig_data = os.path.join(
-            self.config.data_ingestion.unzip_dir,
-            "validation_dataset"
+            self.config.data_ingestion.unzip_dir, "validation_dataset"
         )
 
         # Ensure training root directory exists
@@ -198,20 +192,18 @@ class Configeration_Manager:
 
         # Build and return the TrainingConfig dataclass
         training_config = Training_Config(
-            root_dir= training.root_dir, 
-            trained_model_path= training.trained_model_path, 
-            update_base_model= prepare_base_model.update_base_model, 
-            training_data= trainig_data, 
-            param_image_size= self.param.IMG_SIZE, 
-            param_batch_size= self.param.BATCH_SIZE, 
-            param_epochs= self.param.EPOCHS, 
-            params_augmentation= self.param.AUGMENTATION,
-            param_learning_rate= self.param.LEARNING_RATE
+            root_dir=training.root_dir,
+            trained_model_path=training.trained_model_path,
+            update_base_model=prepare_base_model.update_base_model,
+            training_data=trainig_data,
+            param_image_size=self.param.IMG_SIZE,
+            param_batch_size=self.param.BATCH_SIZE,
+            param_epochs=self.param.EPOCHS,
+            params_augmentation=self.param.AUGMENTATION,
+            param_learning_rate=self.param.LEARNING_RATE,
         )
         return training_config
 
-  
-       
     def get_model_evaluation_config(self) -> Model_Evaluation_Config:
         """
         Create and return the Model_Evaluation_Config dataclass.
@@ -221,18 +213,15 @@ class Configeration_Manager:
             2. Ensures all required directories exist.
             3. Converts string paths to Path objects for OS-independent handling.
             4. Returns a fully populated Model_Evaluation_Config object.
-        
+
         Returns:
-            Model_Evaluation_Config: Dataclass containing paths, MLflow info, params, 
+            Model_Evaluation_Config: Dataclass containing paths, MLflow info, params,
                                 and evaluation-specific settings.
         """
         config = self.config.model_evaluation
 
         # Ensure directories exist
-        create_directories([
-            Path(config.root_dir),
-            Path(config.scores_file_dir)
-        ])
+        create_directories([Path(config.root_dir), Path(config.scores_file_dir)])
 
         # Build evaluation config
         model_evaluation_config = Model_Evaluation_Config(
@@ -248,10 +237,8 @@ class Configeration_Manager:
             all_params=self.param.to_dict(),
             param_image_size=self.param.IMG_SIZE,
             param_batch_size=self.param.BATCH_SIZE,
-            training_data=Path(
-                self.config.data_ingestion.unzip_dir
-            ) / "validation_dataset"
+            training_data=Path(self.config.data_ingestion.unzip_dir)
+            / "validation_dataset",
         )
 
         return model_evaluation_config
-      
