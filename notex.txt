@@ -60,3 +60,5 @@ step8 :
 1. create users
 2. select AmazonS3FullAccess
 3. 
+
+ECR REPO : 520551197421.dkr.ecr.us-east-1.amazonaws.com/chestxray
