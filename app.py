@@ -1,7 +1,7 @@
 import os
 import tempfile
 
-import cv2
+# import cv2
 import numpy as np
 import streamlit as st
 
@@ -10,13 +10,28 @@ from src.components.inferance import Prediction_Pipeline
 MODEL_PATH = "final_model/best_chest_xray_model.keras"
 
 
+# def build_overlay(original_img: np.ndarray, mask: np.ndarray) -> np.ndarray:
+#     mask_binary = (mask > 0).astype(np.uint8)
+#     # Using a slightly more clinical "Cyan" overlay instead of pure Red
+#     overlay_layer = np.zeros_like(original_img)
+#     overlay_layer[:, :, 1] = mask_binary * 255  # Green Channel
+#     overlay_layer[:, :, 2] = mask_binary * 200  # Hint of Blue
+#     return cv2.addWeighted(original_img, 0.8, overlay_layer, 0.4, 0)
+
+# from PIL import Image
+
 def build_overlay(original_img: np.ndarray, mask: np.ndarray) -> np.ndarray:
     mask_binary = (mask > 0).astype(np.uint8)
-    # Using a slightly more clinical "Cyan" overlay instead of pure Red
-    overlay_layer = np.zeros_like(original_img)
-    overlay_layer[:, :, 1] = mask_binary * 255  # Green Channel
-    overlay_layer[:, :, 2] = mask_binary * 200  # Hint of Blue
-    return cv2.addWeighted(original_img, 0.8, overlay_layer, 0.4, 0)
+
+    # Create cyan overlay
+    overlay = np.zeros_like(original_img)
+    overlay[:, :, 1] = mask_binary * 255  # Green
+    overlay[:, :, 2] = mask_binary * 200  # Blue
+
+    # Manual blending (instead of cv2.addWeighted)
+    blended = (original_img * 0.8 + overlay * 0.4).clip(0, 255).astype(np.uint8)
+
+    return blended
 
 
 @st.cache_resource
