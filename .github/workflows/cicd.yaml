@@ -83,7 +83,7 @@ jobs:
 
       - name: Stop and remove container if running
         run: |
-         docker ps -q --filter "name=pneumonia-detector" | grep -q . && docker stop cnncls && docker rm -fv pneumonia-detector
+         docker ps -q --filter "name=pneumonia-detector" | grep -q . && docker stop pneumonia-detector && docker rm -fv pneumonia-detector
        
 
       - name: Run Docker Image to serve users
