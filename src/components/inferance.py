@@ -1,109 +1,131 @@
 from pathlib import Path
-
+import os
 import cv2
-import matplotlib.pyplot as plt
+import boto3
 import numpy as np
 import tensorflow as tf
+from botocore.exceptions import ClientError
+import matplotlib.pyplot as plt
+
+
+BUCKET_NAME = "pneumonia-model-bucket"
+MODEL_KEY = "best_chest_xray_model.keras"
 
 
 class Prediction_Pipeline:
-    """
-    Inference Pipeline for Pneumothorax detection.
-
-    This class handles the end-to-end process of loading a trained segmentation model,
-    preprocessing input chest X-rays, and generating both binary masks and
-    bounding box visualizations for medical analysis.
-    """
 
     def __init__(self, model_path: str):
-        """
-        Initializes the prediction engine by loading the Keras model.
 
-        Args:
-            model_path (str): Path to the saved .keras or .h5 model file.
-        """
-        # Load model with custom loss and metric functions
-        self.model = tf.keras.models.load_model(model_path, compile=False)
+        self.model_path = model_path
 
-    def preprocess_image(self, image_path: str) -> tuple:
-        """
-        Reads, color-corrects, and normalizes an image for the model.
+        # Download model if not exists
+        self.download_s3()
 
-        Args:
-            image_path (str): Local path to the X-ray image file.
+        # Load model
+        self.model = tf.keras.models.load_model(
+            self.model_path,
+            compile=False
+        )
 
-        Returns:
-            tuple: (Original RGB image, Normalized 4D tensor, Original image dimensions)
-        """
+    def download_s3(self):
+
+        try:
+
+            if not os.path.exists(self.model_path):
+
+                os.makedirs(
+                    os.path.dirname(self.model_path),
+                    exist_ok=True
+                )
+
+                print("Downloading model from S3...")
+
+                s3 = boto3.client("s3")
+
+                s3.download_file(
+                    BUCKET_NAME,
+                    MODEL_KEY,
+                    self.model_path
+                )
+
+                print("Model downloaded successfully!")
+
+            else:
+                print("Model already exists.")
+
+        except ClientError as e:
+            print(f"AWS S3 Error: {e}")
+            raise e
+
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e
+
+    def preprocess_image(self, image_path: str):
+
         img = cv2.imread(image_path)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        original_shape = img.shape[:2]  # (Height, Width)
 
-        # Resize to 256x256 as per model training requirements
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        original_shape = img.shape[:2]
+
         img_resized = cv2.resize(img, (256, 256))
-        # Normalize pixel values to [0, 1] range
+
         img_normalized = img_resized / 255.0
-        # Expand dimensions to create a batch (1, 256, 256, 3)
+
         img_final = np.expand_dims(img_normalized, axis=0)
+
         return img, img_final, original_shape
 
     def predict(self, image_path: str, threshold: float = 0.20):
-        """
-        Performs model inference and generates detection results.
-        """
-        original_img, processed_img, (h, w) = self.preprocess_image(image_path)
 
-        # 1. Run model prediction
+        original_img, processed_img, (h, w) = self.preprocess_image(
+            image_path
+        )
+
         prediction = self.model.predict(processed_img)[0]
-        prediction = np.squeeze(
-            prediction
-        )  # Crucial: Convert (256, 256, 1) to (256, 256)
 
-        print(f"Max Confidence: {np.max(prediction):.4f}")
-        print(f"Min Confidence: {np.min(prediction):.4f}")
+        prediction = np.squeeze(prediction)
 
-        # 2. Generate binary mask and resize to ORIGINAL resolution FIRST
         mask_256 = (prediction > threshold).astype(np.uint8)
-        mask_resized = cv2.resize(mask_256, (w, h), interpolation=cv2.INTER_NEAREST)
 
-        # 3. Detect contours on the RESIZED mask (matching original image dimensions)
+        mask_resized = cv2.resize(
+            mask_256,
+            (w, h),
+            interpolation=cv2.INTER_NEAREST
+        )
+
         contours, _ = cv2.findContours(
-            mask_resized.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            mask_resized.copy(),
+            cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_SIMPLE
         )
 
         output_img = original_img.copy()
-        found_count = 0
 
         for cnt in contours:
-            # Scale the area filter relative to image size
-            if cv2.contourArea(cnt) > (
-                w * h * 0.001
-            ):  # Filter objects smaller than 0.1% of image
-                found_count += 1
+
+            if cv2.contourArea(cnt) > (w * h * 0.001):
+
                 x, y, bw, bh = cv2.boundingRect(cnt)
-                # Draw on the original sized image
-                cv2.rectangle(output_img, (x, y), (x + bw, y + bh), (0, 255, 0), 3)
-                label = f"Pneumo: {np.max(prediction)*100:.1f}%"
-                cv2.putText(
+
+                cv2.rectangle(
                     output_img,
-                    label,
-                    (x, y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8,
+                    (x, y),
+                    (x + bw, y + bh),
                     (0, 255, 0),
-                    2,
+                    3
                 )
 
-        print(f"Detected {found_count} regions.")
         return original_img, mask_resized, output_img
 
 
 if __name__ == "__main__":
     # Demonstration of the prediction pipeline
     try:
-        # pipeline = Prediction_Pipeline(model_path="final_model/modelbest.keras")
+        # pipeline = Prediction_Pipeline(MODEL_PATH="final_model/modelbest.keras")
         pipeline = Prediction_Pipeline(
-            model_path="final_model/best_chest_xray_model.keras"
+            MODEL_PATH="final_model/best_chest_xray_model.keras"
         )
         test_img_path = "chest-xray/0_test_1_.png"
 
