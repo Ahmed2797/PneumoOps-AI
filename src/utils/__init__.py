@@ -3,7 +3,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any,Union
 
 import joblib
 import tensorflow as tf
@@ -177,24 +177,17 @@ def load_bin(path: Path) -> Any:
 
 
 @ensure_annotations
-def get_size(path: Path) -> str:
+def get_size(path: Union[str, Path]) -> str:
     """
     Returns file size in KB.
-
-    Args:
-        path (Path): File path.
-
-    Returns:
-        str: Human-readable file size.
-
-    Raises:
-        CustomException: If file not found or access fails.
     """
     try:
-        if not os.path.exists(path):
+        path = Path(path)
+
+        if not path.exists():
             raise FileNotFoundError(f"{path} not found")
 
-        size_in_kb = round(os.path.getsize(path) / 1024)
+        size_in_kb = round(path.stat().st_size / 1024)
         return f"~ {size_in_kb} KB"
 
     except Exception as e:
