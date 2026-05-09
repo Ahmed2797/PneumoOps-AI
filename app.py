@@ -135,6 +135,7 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
+    ## if load model in clould or local
     # if not os.path.exists(MODEL_PATH):
     #     st.error(f"Critical Error: Neural weights not found at `{MODEL_PATH}`")
     #     st.stop()
