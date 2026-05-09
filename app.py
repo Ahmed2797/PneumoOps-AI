@@ -6,9 +6,12 @@ import numpy as np
 import streamlit as st
 
 from src.components.inferance import Prediction_Pipeline
+from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 
-MODEL_PATH = "final_model/best_chest_xray_model.keras"
-
+MODEL_PATH = Path("aws_model") / "best_chest_xray_model.keras"
+MODEL_KEY = "best_chest_xray_model.keras"
 
 # def build_overlay(original_img: np.ndarray, mask: np.ndarray) -> np.ndarray:
 #     mask_binary = (mask > 0).astype(np.uint8)
@@ -35,8 +38,8 @@ def build_overlay(original_img: np.ndarray, mask: np.ndarray) -> np.ndarray:
 
 
 @st.cache_resource
-def load_pipeline(model_path: str) -> Prediction_Pipeline:
-    return Prediction_Pipeline(model_path=model_path)
+def load_pipeline(model_path_init: str) -> Prediction_Pipeline:
+    return Prediction_Pipeline(model_path=model_path_init)
 
 
 def main() -> None:
@@ -132,11 +135,11 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    if not os.path.exists(MODEL_PATH):
-        st.error(f"Critical Error: Neural weights not found at `{MODEL_PATH}`")
-        st.stop()
+    # if not os.path.exists(MODEL_PATH):
+    #     st.error(f"Critical Error: Neural weights not found at `{MODEL_PATH}`")
+    #     st.stop()
 
-    pipeline = load_pipeline(MODEL_PATH)
+    pipeline = load_pipeline(model_path_init=str(MODEL_PATH))
 
     # --- SIDEBAR CONTROLS ---
     with st.sidebar:
