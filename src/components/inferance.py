@@ -6,9 +6,11 @@ import numpy as np
 import tensorflow as tf
 from botocore.exceptions import ClientError
 import matplotlib.pyplot as plt
+from dotenv import load_dotenv
+load_dotenv()
 
 
-BUCKET_NAME = "pneumonia-model-bucket"
+BUCKET_NAME = "pneumonia-model-bucket-2026"
 MODEL_KEY = "best_chest_xray_model.keras"
 
 
@@ -31,35 +33,36 @@ class Prediction_Pipeline:
 
         try:
 
-            if not os.path.exists(self.model_path):
+            # Skip if already exists
+            if os.path.exists(self.model_path):
+                print("Model already exists locally.")
+                return
 
-                os.makedirs(
-                    os.path.dirname(self.model_path),
-                    exist_ok=True
-                )
+            # Create directory
+            Path(self.model_path).parent.mkdir(
+                parents=True,
+                exist_ok=True
+            )
 
-                print("Downloading model from S3...")
+            print("Downloading model from S3...")
 
-                s3 = boto3.client("s3")
+            s3 = boto3.client("s3")
 
-                s3.download_file(
-                    BUCKET_NAME,
-                    MODEL_KEY,
-                    self.model_path
-                )
+            s3.download_file(
+                BUCKET_NAME,
+                MODEL_KEY,
+                self.model_path
+            )
 
-                print("Model downloaded successfully!")
-
-            else:
-                print("Model already exists.")
+            print("Model downloaded successfully!")
 
         except ClientError as e:
             print(f"AWS S3 Error: {e}")
-            raise e
+            raise
 
         except Exception as e:
-            print(f"Error: {e}")
-            raise e
+            print(f"General Error: {e}")
+            raise
 
     def preprocess_image(self, image_path: str):
 
