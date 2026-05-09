@@ -9,3 +9,4 @@ venv/
 data/
 artifacts/
 models/
+aws_model
